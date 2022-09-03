@@ -2,42 +2,37 @@
 using namespace std;
 //后缀表达式的计算，使用数组模拟栈，操作数入栈，操作符出栈两个，计算后压入栈中 
 //3.5.2.-*7.+@
-char a[51];
-double stk[51];
-int k,n=1;
+
+char op;
+int stk[51];
+int k,a,b,top = -1;  //栈顶指针
+int num = 0;  //记录操作数 ;
 
 int main(){
-	int top = -1;  //栈顶指针
-	while(cin >> a[++k]) if(a[k] == '@') break;
-	for(int i = 1;i <= k;i++){
-		switch(a[i]){
-			double n1,n2;
-			case '.':break;
-			case '@':cout << stk[top] << endl;
-					return 0;
-			case '+':
-				n1 = stk[top--];
-				n2 = stk[top--];
-				stk[++top] = n2+n1;
-				break;
-			case '-':
-				n1 = stk[top--];
-				n2 = stk[top--];
-				stk[++top] = n2-n1;	
-				break;
-			case '*':
-				n1 = stk[top--];
-				n2 = stk[top--];
-				stk[++top] = n2*n1;	
-				break;
-			case '/':
-				n1 = stk[top--];
-				n2 = stk[top--];
-				stk[++top] = n2/n1;	
-				break;
-			default:stk[++top] = a[i]-'0';
+	while((op = getchar()) != '@'){
+		if(op >= '0' && op <= '9') num = num*10+(op-'0');  //计算操作数
+		else if(op == '.') {   //操作数入栈 
+			stk[++top] = num; 
+			num = 0;
+		}
+		else if(op == '+'){    //操作符，计算后入栈 
+			a = stk[top--],b = stk[top--];
+			stk[++top] = b+a;
+		}
+		else if(op == '-'){
+			a = stk[top--],b = stk[top--];
+			stk[++top] = b-a;
+		}
+		else if(op == '*'){
+			a = stk[top--],b = stk[top--];
+			stk[++top] = b*a;
+		}
+		else if(op == '/'){
+			a = stk[top--],b = stk[top--];
+			stk[++top] = b/a;
 		}
 	}
+	cout << stk[top];
 	return 0;
 }
 
