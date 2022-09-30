@@ -48,7 +48,7 @@ Node* bulidTree(int weight[],char id[],int n){
 	}
 	quickSort(que,front+1,rear);
 	
-	while(front+1 < rear){  //队列不空  
+	while(front+1 < rear){  //队列中至少两个元素 
 	
 		p = que[++front];  //取出前两个最小元素
 		q = que[++front];
