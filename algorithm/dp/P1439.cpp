@@ -1,19 +1,18 @@
 #include <bits/stdc++.h>
 using namespace std;
-
-
+int n,s1[100001],s2[100001],dp[100001][100001];
 
 int main(){
-	int n;
 	cin >> n;
-	int a[n],b[n];
-	int dp[n+1];
-	for(int i = 0;i < n;i++) cin >> a[i];
-	for(int i = 0;i < n;i++) cin >> b[i];
-	memset(dp,0,n+1);
-	for(int i = 0;i < n;i++)
-		for(int j = 0;j < n;j++)
-			if(a[i] == b[j]) dp[j] = dp[]
+	for(int i = 1;i <= n;i++) cin >> s1[i];
+	for(int i = 1;i <= n;i++) cin >> s2[i];
+	for(int i = 1;i <= n;i++){
+		for(int j = 1;j <= n;j++){
+			if(s1[i]==s2[j]) dp[i][j] = dp[i-1][j-1]+1;
+			else dp[i][j] = max(dp[i-1][j],dp[i][j-1]);
+		}
+	}
+	cout << dp[n][n];
 	return 0;
 }
 
