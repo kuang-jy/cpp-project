@@ -1,0 +1,13 @@
+"D:\JetBrains\CLion 2021.3.4\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=D:/JetBrains/CLion 2021.3.4/bin/ninja/win/ninja.exe" -G Ninja D:\cppProject\cppProject
+-- Configuring done
+CMake Error at CMakeLists.txt:6 (add_executable):
+  Cannot find source file:
+
+    algorithm/dp/0-1����.cpp
+
+
+CMake Error at CMakeLists.txt:6 (add_executable):
+  No SOURCES given to target: cppProject
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.
