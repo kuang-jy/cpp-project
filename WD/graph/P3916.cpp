@@ -1,45 +1,26 @@
 #include <iostream>
+#include <vector>
 using namespace std;
+int n,m,f,t,ans[100010];
+vector<int> links[100010];  //存图
+/*
+    反向建图，考虑从编号最大结点可以访问的所有节点，从n-1走dfs，若数组中有值直接返回
+*/
 
-int arr[100],size = 0;
-
-void swap(int& a,int& b){
-    int t = a;
-    a = b;
-    b = t;
-}
-
-void adjust_up(int idx){
-    while(idx != 1 && arr[idx] < arr[idx/2]){
-        swap(arr[idx],arr[idx/2]);
-        idx/=2;
-    }
-}
-
-void adjust_down(int idx){
-    int ch = idx*2;
-    while(idx <= size){
-        if(idx < size && arr[ch] > arr[ch+1]) ch++;
-        if(arr[idx] > arr[ch]){
-            swap(arr[idx],arr[ch]);
-            idx = ch;
-            ch = idx*2;
-        }
-        else break;
-    }
-}
-
-void put(int num){
-    arr[++size] = num;
-    adjust_up(size);
+void dfs(int i,int cur){
+    if(ans[i] != 0) return;
+    ans[i] = cur;
+    for(int j = 0;j < links[i].size();j++)
+        dfs(links[i][j],cur);
 }
 
 int main(){
-    int a[10] = {NULL,23,17,72,60,25,8,68,71,52};
-    for(int i = 1;i <= 9;i++) put(a[i]);
-    swap(arr[1],arr[size--]);
-    adjust_down(1);
-    swap(arr[1],arr[size--]);
-    adjust_down(1);
-    for(int i = 1;i <= size;i++) cout << arr[i] << " ";
+    scanf("%d %d",&n,&m);
+    for(int i = 1;i <= m;i++){
+        scanf("%d %d",&f,&t);
+        links[t].push_back(f);  //反向建边
+    }
+    for(int i = n;i >= 1;i--) dfs(i,i);
+    for(int i = 1;i <= n;i++) printf("%d ",ans[i]);
+    return 0;
 }

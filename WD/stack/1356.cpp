@@ -1,56 +1,56 @@
 #include <iostream>
-#include <cmath>
 #include <cstring>
+#include <cmath>
 using namespace std;
-int stk1[10000],top1 = -1,top2 = -1;
-char stk2[10000];
-/*
-1+(3+2)*(7^2+6*9)/(2)
-*/
+char ch;
+int stk1[1000],top1 = -1,top2 = -1;
+char stk2[1000];
 
-int prior[129];
+int getPriority(char a){
+    if(a == '+' || a == '-') return 0;
+    if(a == '^') return 2;
+    return 1;
+}
 
-void calc(){
-    int a = stk1[top1--];
-    int b = stk1[top1--];
-    char ch = stk2[top2--];
-    switch(ch){
-        case '+': stk1[++top1] = a+b; break;
-        case '-': stk1[++top1] = b-a; break;
-        case '*': stk1[++top1] = a*b; break;
-        case '/': stk1[++top1] = b/a; break;
-        case '^': stk1[++top1] = (int)pow(b,a);
-    }
+int calc(int a,char op,int b){
+    if(op == '+') return a+b;
+    if(op == '-') return a-b;
+    if(op == '*') return a*b;
+    if(op == '/') return a/b;
+    if(op == '^') return pow(a,b);    
 }
 
 int main(){
-    prior['+'] = prior['-'] = 1;
-    prior['*'] = prior['/'] = 2;
-    prior['^'] = 3;
-    prior['('] = 0;
-    string s;
-    cin >> s;
-    int n = s.length();
-    for(int i = 0;i < n;i++){
-        char ch = s[i];
-        switch(ch){
-            case '+':
-            case '-':
-            case '*':
-            case '/': 
-            case '^':
-                   while(prior[ch] < prior[stk2[top2]] && top2 >= 0) calc();
-                    stk2[++top2] = ch;
-                    break;
-            case '(': stk2[++top2] = ch; break;
-            case ')': 
-                    while(stk2[top2] != '(') calc();
-                    top2--;
-                    break;
-            default: stk1[++top1] = ch-'0';
+    scanf("%c",&ch);
+    while(ch != '\0'){
+        if(ch >= '0' && ch <= '9') stk1[++top1] = ch-'0';
+        else if(ch == '(') stk2[++top2] = ch;
+        else if(ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^'){
+            if(top2 == -1 || stk2[top2] == '(' || getPriority(stk2[top2]) < getPriority(ch)) stk2[++top2] = ch;
+            else{
+                while(top2 >= 0 && getPriority(stk2[top2]) >= getPriority(ch)){
+                    int x = stk1[top1--],y = stk1[top1--];
+                    int num = calc(y,stk2[top2--],x);
+                    stk1[++top1] = num;
+                }
+                stk2[++top2] = ch;
+            }
         }
+        else if(ch == ')'){
+            while(top2 >= 0 && stk2[top2] != '('){
+                int x = stk1[top1--],y = stk1[top1--];
+                int num = calc(y,stk2[top2--],x);
+                stk1[++top1] = num;
+            }
+            top2--;
+        }
+        scanf("%c",&ch);
     }
-    while(top2 >= 0) calc();
+    while(top2 >= 0){
+        int x = stk1[top1--],y = stk1[top1--];
+        int num = calc(y,stk2[top2--],x);
+        stk1[++top1] = num;
+    }
     printf("%d\n",stk1[0]);
     return 0;
 }

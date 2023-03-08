@@ -1,37 +1,30 @@
 #include <iostream>
+#include <cstring>
 using namespace std;
+int grid[21][21],sr,sc,hr,hc;
+long long dp[21][21];
+const int dx[9] = {1,-1,2,-2,1,-1,2,-2,0},dy[9] = {2,-2,1,-1,-2,2,-1,1,0};
 
-const int dx[] = {2,-2,1,-1,2,-2,1,-1,0},dy[] = {1,1,2,2,-1,-1,-2,-2,0};   //马的位置增量 
-int map[25][25],mx,my,n,m;
-long long dp[25][25];
+bool check(int x,int y){
+	if(x >= 0 && x <= sr && y >=0 && y <= sc) return 1;
+	return 0;
+}
 
 int main(){
-	cin >> n >> m >> mx >> my;
-	for(int i = 0;i <= n;i++)
-		for(int j = 0;j <= m;j++)
-			map[i][j] = 0;
-	for(int i = 0;i < 9;i++)
-		if(mx+dx[i] >= 0 && my+dy[i] >= 0 && mx+dx[i] <= n && my+dy[i] <= m)
-			map[mx+dx[i]][my+dy[i]] = 1;  //标记马可达的位置	
-	bool flag = false;
-	for(int i = 0;i <= n;i++){
-		if(map[i][0] == 1) flag = 1;
-		if(flag) dp[i][0] = 0;
-		else dp[i][0] = 1;
+	scanf("%d %d %d %d",&sr,&sc,&hr,&hc);
+	for(int i = 0;i < 9;i++){
+		int nr = hr+dx[i], nc = hc+dy[i];
+		if(check(nr,nc))
+			grid[nr][nc] = 1;   //标记所有马控制位置
 	}
-	flag = false;
-	for(int i = 0;i <= m;i++){
-		if(map[0][i] == 1) flag = 1;
-		if(flag) dp[0][i] = 0;
-		else dp[0][i] = 1;
-	}
-	for(int i = 1;i <= n;i++)
-		for(int j = 1;j <= m;j++)
-			if(map[i][j] != 1)
-				dp[i][j] = dp[i-1][j]+dp[i][j-1];
-			else 
-				dp[i][j] = 0;
-	cout << dp[n][m];
+	dp[0][0] = 1;
+	for(int i = 0;i <= sr;i++)
+		for(int j = 0;j <= sc;j++)
+			if(grid[i][j] != 1){
+				if(i) dp[i][j] += dp[i-1][j];
+				if(j) dp[i][j] += dp[i][j-1];
+			}
+	printf("%lld\n",dp[sr][sc]);
 	return 0;
 }
 

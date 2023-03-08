@@ -24,7 +24,7 @@ void buildTree(Tree& t)  //先序建树
 
 
 //中序线索化
-void inThread(Tree& root,TNode*& pre){
+void inThread(Tree& root,Tree& pre){
     if(!root) return;
     inThread(root->left,pre);
     if(!root->left){
@@ -55,11 +55,11 @@ void preThread(Tree& root,Tree& pre){
     if(root->ltag != 1)
         preThread(root->left,pre);
     if(root->rtag != 1)
-    preThread(root->right,pre);
+        preThread(root->right,pre);
 }
 
 //后序线索化
-void postThread(Tree& root,Tree&pre){
+void postThread(Tree& root,Tree& pre){
     if(!root) return;
     postThread(root->left,pre);
     postThread(root->right,pre);
@@ -81,15 +81,42 @@ void disp(Tree root){
     }
 }
 
+void inVis(Tree& t){
+    while(t){
+        while(!t->ltag) t = t->left;   //走到最左结点
+        printf("%c ",t->val);
+        while(t->rtag && t->right){
+            t = t->right;
+            printf("%c ",t->val);
+        }
+        t = t->right;
+    }
+}
+
+void preVis(Tree& t){
+    while(t){
+        while(!t->ltag){
+            printf("%c ",t->val);
+            t = t->left;
+        }  //边向左走，边访问结点
+        printf("%c ",t->val);  //访问最左节点
+        // if(t->ltag) t = t->right;
+        t = t->right;
+    }
+}
+
 int main(){
     // abd###cf###
     // ABCE##F##D##CD##G##
     Tree t;
     buildTree(t);
     disp(t);
+    cout << endl;
     Tree pre = NULL;
-    // inThread(t,pre);
-    // preThread(t,pre);
-    postThread(t,pre);
+    // inThread(t,pre);  //中序线索化
+    // inVis(t);  //中序线索化遍历
+    // preThread(t,pre);  //先序线索化
+    // preVis(t);   //先序线索化遍历
+    postThread(t,pre);  //后序线索化
     return 0;
 }

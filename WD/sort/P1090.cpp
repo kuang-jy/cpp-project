@@ -1,61 +1,56 @@
 #include <iostream>
 using namespace std;
-int heap[10010],size = 0;
+int n,minHeap[10010],size,x;
 
-void disp(){
-    for(int i = 1;i <= size;i++) printf("%d,",heap[i]);
-    printf("\n");
+void swap(int& a,int &b){
+    int t = a;
+    a = b;
+    b = t;
 }
 
-void swap(int& a,int& b){
-    int tmp = a;
-    a = b;b = tmp;
-}
-
-//向上调整，插入
-void adjust_up(int num){
-    int i = ++size;
-    heap[i] = num;
-    while(i != 1 && heap[i] < heap[i/2]){
-        swap(heap[i],heap[i/2]);
-        i/=2;
+void adjust_up(int idx){
+    while(idx != 1 && minHeap[idx] < minHeap[idx/2]){
+        swap(minHeap[idx],minHeap[idx/2]);
+        idx /= 2;
     }
 }
 
-//向下调整
-void adjust_down(int k){
-    int mininum = k;
-    int lc = k*2,rc = k*2+1;
-    if(lc <= size && heap[lc] < heap[mininum]) mininum = lc;
-    if(rc <= size && heap[rc] < heap[mininum]) mininum = rc;
-    if(mininum != k){
-        swap(heap[k],heap[mininum]);
-        adjust_down(mininum);
-    }
+void adjust_down(int idx){
+    int ch = idx*2;
+    while(ch <= size){
+        if(ch < size && minHeap[ch] > minHeap[ch+1]) ch++;
+        if(minHeap[ch] < minHeap[idx]){
+            swap(minHeap[ch],minHeap[idx]);
+            idx = ch;
+            ch = idx*2;
+        }
+        else break;
+    }    
 }
 
-//取出，删除堆顶元素
-int gettop(){
-    swap(heap[1],heap[size]);
-    size--;
+void put(int num){
+    minHeap[++size] = num;
+    adjust_up(size);
+}
+
+int pop(){
+    swap(minHeap[1],minHeap[size--]);
     adjust_down(1);
-    return heap[size+1];
+    return minHeap[size+1];
 }
 
-int main(int argc, char const *argv[])
-{
-    int n,m;
-    cin >> n;
+int main(){
+    scanf("%d",&n);
     while(n--){
-        cin >> m;
-        adjust_up(m);
+        scanf("%d",&x);
+        put(x);
     }
-    int ans = 0;
+    x = 0;
     while(size > 1){
-        int n1 = gettop(),n2 = gettop();
-        ans += n1+n2;
-        adjust_up(n1+n2);
+        int a = pop(),b = pop();
+        x += a+b;
+        put(a+b);
     }
-    cout << ans;
+    printf("%d\n",x);
     return 0;
 }

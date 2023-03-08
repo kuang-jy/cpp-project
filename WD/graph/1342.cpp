@@ -22,23 +22,16 @@ int main(){
 		cin >>a >>b;
 		g[a-1][b-1] = g[b-1][a-1] = dist(p[a-1][0],p[a-1][1],p[b-1][0],p[b-1][1]);	
 	}
-//	for(int i = 0;i < n;i++){
-//		for(int j = 0;j < n;j++)
-//			cout << g[i][j] << " " ;
-//		cout << endl;
-//	}
 	int s,e;
 	cin >> s >> e;
 	for(int i = 0;i < n;i++){
 		if(g[s-1][i] != 0.0) dit[i] = g[s-1][i];
 	}
 	vis[0] = 1;
-//	dit[0] = 0;
 	for(int i = 1;i < n;i++){
 		int idx = 0;
 		for(int j = 0;j < n;j++)
 			if(!vis[j] && dit[idx] > dit[j]) idx = j;
-//		printf("use:%d\n",idx+1);
 		vis[idx] = 1;
 		for(int j = 0;j < n;j++)
 			if(!vis[j] && dit[j] > dit[idx]+g[idx][j]) dit[j] = dit[idx]+g[idx][j];
