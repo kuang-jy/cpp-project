@@ -195,6 +195,176 @@ public:
         dfs(root,val,k);
         return val;
     }
+    //2379. 得到 K 个黑块的最少涂色次数
+    int minimumRecolors(string blocks, int k) {
+        int ans = 0;
+        int cntw = 0;  //白色计数
+        int left = 0, right = 0;
+        while(right < k)  //创建一个宽度为k的滑动窗口
+            if(blocks[right++] == 'W') cntw++;
+        ans = cntw;
+        while(right < blocks.length()){
+            if(blocks[left++] == 'W') cntw--;
+            if(blocks[right++] == 'W') cntw++;
+            ans = min(ans,cntw);
+        }
+        return ans;
+    }
+    //2380. 二进制字符串重新安排顺序需要的时间
+    int secondsToRemoveOccurrences(string s) {
+        int n = s.length();
+        int cnt0 = 0;
+        int dp[n];   //dp[i]表示第i个位置调整好需要几次
+        memset(dp,0,sizeof dp);
+        for(int i = 0;i < n;i++){
+            if(s[i] == '0') cnt0++;   //统计1前面的0
+            // 对于1，若前面没有0，那么已经调整好
+            //      若前面有0，那么有两种情况：
+            //                         1.001 dp[i] = cnt0
+            //                         2.0011 dp[i] = dp[i-1]+1
+            // 对于0，dp[i] = dp[i-1];
+            if(i == 0) continue;
+            if(cnt0 && s[i] == '1') dp[i] = max(cnt0,dp[i-1]+1);
+            else dp[i] = dp[i-1];  
+        }
+        return dp[n-1];
+    }
+    //2381. 字母移位 II
+    string shiftingLetters(string s, vector<vector<int>>& shifts) {
+        int n = s.length();
+        vector<int> arr(n,0);  //差分数组
+        vector<int> sum(n,0);  //前缀和数组
+        for(vector<int> vec : shifts){
+            arr[vec[0]] += vec[2] ? 1 : -1;
+            if(vec[1]+1 < n)
+                arr[vec[1]+1] += vec[2] ? -1 : 1;
+        }
+        for(int i = 0;i < n;i++)  //求前缀和
+            if(i == 0) sum[i] = arr[i];
+            else sum[i] = arr[i]+sum[i-1];
+        for(int i = 0;i < n;i++){
+            int c = s[i]-'a';
+            c = ((c+sum[i])%26+26)%26;
+            s[i] = 'a'+c;
+        }
+        return s;
+    }
+    //2383. 赢得比赛需要的最少训练时长
+    int minNumberOfHours(int initialEnergy, int initialExperience, vector<int>& energy, vector<int>& experience) {
+        int n = energy.size();
+        int dp[n+1];
+        int f = 0;
+        for(int i = 1;i <= n;i++){
+            if(initialEnergy > energy[i-1] && initialExperience > experience[i-1]){
+                initialEnergy -= energy[i-1];
+                initialExperience += experience[i-1];
+            }
+            else if(initialEnergy > energy[i-1]){
+                f = f+experience[i-1]-initialExperience+1;
+                initialExperience += 2*experience[i-1]-initialExperience+1;
+                initialEnergy -= energy[i-1];
+            }
+            else if(initialExperience > experience[i-1]){
+                f = f+energy[i-1]-initialEnergy+1;
+                initialEnergy = 1;
+                initialExperience += experience[i-1];
+            }
+            else{
+                f = f+experience[i-1]-initialExperience+1+energy[i-1]-initialEnergy+1;
+                initialEnergy = 1;
+                initialExperience += 2*experience[i-1]-initialExperience+1;
+            }
+        }
+        return f;
+    }
+    //2385. 感染二叉树需要的总时间
+    const int N = 1e5+10;
+    vector<int> g[N];  //图
+    int vis[N];  //标记访问数组
+
+    void dfs(TreeNode* root){  //dfs建图
+        if(!root) return;
+        if(root->left){
+            int a = root->val, b = root->left->val;
+            g[a].push_back(b);
+            g[b].push_back(a);
+            dfs(root->left);
+        }
+        if(root->right){
+            int a = root->val, b = root->right->val;
+            g[a].push_back(b);
+            g[b].push_back(a);
+            dfs(root->right);
+        }
+    }
+
+    int bfs(int start){
+        memset(vis,0,sizeof vis);
+        int step = -1;
+        int que[N], front = -1,rear = -1, last = 0;
+        que[++rear] = start;
+        vis[start] = 1;
+        while(front < rear){
+            int out = que[++front];
+            for(int x : g[out]){
+                if(!vis[x]) 
+                    que[++rear] = x;
+                vis[x] = 1;
+            }
+            if(front == last){
+                last = rear;
+                step++;
+            }
+        }
+        return step;
+    }
+
+    int amountOfTime(TreeNode* root, int start) {
+        fill(g,g+N,vector<int>());  //初始化图
+        dfs(root);
+        return bfs(start);
+    }
+    //2389. 和有限的最长子序列
+    void swap(int& a,int& b){
+        int c = a;
+        a = b;
+        b = c;
+    }
+    int partition(int low,int high,vector<int>& nums){
+        int pivot = low;
+        int i = low;
+        for(int j = low+1,j <= high;j++)
+            if(arr[j] < arr[pivot]) 
+                swap(arr[j],arr[++i]);
+        swap(arr[i],arr[pivot]);
+        return i;
+    }
+    void qsort(int low,int high,vector<int>& nums){
+        if(low >= high) return;
+        int pivot = partition(low,high,arr);
+        qsort(low,pivot,arr);
+        qsort(pivot+1,high,arr);
+    }
+    int binSearch(int up,vector<int>& nums){
+        int left = 0, right = nums.szie()-1, mid;
+        while(left <= right){
+            mid = low+(high-low)/2;
+            if(nums[mid] <= up) low = mid+1;
+            else high = mid-1;
+        }
+        return low;
+    }
+    vector<int> answerQueries(vector<int>& nums, vector<int>& queries) {
+        int n = nums.szie();
+        qsort(0,n-1,nums);
+        for(int i = 0;i < n;i++){   //求前缀和
+            if(i == 0) continue;
+            else nums[i] += nums[i-1];
+        }
+        for(int i = 0;i < n;i++)
+            queries[i] = binSearch(queries[i],nums);
+        return queries;
+    }
 };
 
 int main(){
@@ -207,7 +377,13 @@ int main(){
     // cout << s.lengthOfLongestSubstring("bbbbb");
     // cout << s.nthUglyNumber(7);
     // cout << s.firstUniqChar("abaccdeff");
-    vector<int> nums{7,5,6,4};
-    cout << s.reversePairs(nums);
+    // vector<int> nums{7,5,6,4};
+    // cout << s.reversePairs(nums);
+    // cout << s.minimumRecolors("WBWBBBW",2);
+    // cout << s.secondsToRemoveOccurrences("11100");
+    // cout << s.shiftingLetters();
+    vector<int> a{1,1,1,1};
+    vector<int> b{1,1,1,50};
+    cout << s.minNumberOfHours(1,1,a,b);
     return 0;
 }
