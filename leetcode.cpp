@@ -3,9 +3,18 @@
 #include<algorithm>
 #include<vector>
 #include<unordered_map>
+#include<stack>
 using namespace std;
 
 const int N = 1e5+10;
+//二叉树结点定义
+struct TreeNode {
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+    TreeNode() : val(0), left(NULL), right(NULL) {}
+    TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+};
 
 class Solution {
 public:
@@ -177,12 +186,6 @@ public:
         return low;
     }
     //剑指 Offer 54. 二叉搜索树的第k大节点
-    struct TreeNode {
-        int val;
-        TreeNode *left;
-        TreeNode *right;
-        TreeNode(int x) : val(x), left(NULL), right(NULL) {}
-    };
     void dfs(TreeNode* root,int& val,int& k){
         if(!root) return;
         dfs(root->right,val,k);
@@ -521,10 +524,11 @@ public:
         for(int i = 0;i < n;i++){
             int idx = order[i];  //选中排i位置的人
             dp[i] = scores[idx];  //初始化dp[i]
-            for(int j = 0;j < i;j++)   //遍历年龄比i小的人
+            for(int j = 0;j < i;j++){   //遍历年龄比i小的人
                 int idx2 = order[j];
                 if(scores[idx2] <= scores[idx])  //如果两人不冲突
                     dp[i] = max(dp[i],dp[j]+scores[idx]);
+            }
             ans = max(ans,dp[i]);
         }
         return ans;
@@ -537,6 +541,225 @@ public:
         for(int i = 0;i < k+1;i++)
             ans.push_back(longer*i + shorter*(k-i));
         return ans;
+    }
+    //面试题 17.05.  字母与数字
+    /*
+    输入: ["A","1","B","C","D","2","3","4","E","5","F","G","6","7","H","I","J","K","L","M"]
+
+    输出: ["A","1","B","C","D","2","3","4","E","5","F","G","6","7"]
+    */
+    //  将字母视为-1，数字视为+1，对输入数组求前缀和，要找到字母数字个数相同的最长子数组，就是要找到前缀和为0的最长子数组
+    //  即s[high]-s[low] = 0，即s[high]=s[low]，则需要记录前缀和第一次出现的位置，使用map记录
+    vector<string> findLongestSubarray(vector<string>& array) {
+        int low = 0, high = 0, n = array.size();
+        vector<int> sum(n+1,0);   //前缀和数组
+        for(int i = 1;i <= n;i++)
+            if(array[i-1][0] >= '0' && array[i-1][0] <= '9')  //是数字+1
+                sum[i] = sum[i-1] + 1;
+            else sum[i] = sum[i-1] + -1;   //是字母-1
+        unordered_map<int,int> mp;  //sum[i]->i 记录前缀和的第一次出现位置
+        unordered_map<int,int>::iterator it;  //map的迭代器
+        for(int i = 0;i <= n;i++){
+            it = mp.find(sum[i]);
+            if(it == mp.end()) mp[sum[i]] = i;  //记录第一次碰到
+            else if(i-it->second > high-low){   //不是第一次碰到，更新答案
+                low = it->second;
+                high = i;
+            }
+        }
+        return {array.begin()+low,array.begin()+high};
+    }
+    //5. 最长回文子串
+    string longestPalindrome(string s) {
+        int n = s.length(), start = 0, maxl = 1;
+        if(n <= 1) return s;
+        vector<vector<int>> dp(n,vector<int>(n));  //dp数组定义：dp[i][j]表示S字符串从Si到Sj是否回文
+        for(int i = 0;i < n;i++) dp[i][i] = 1;  //长度为1的都是回文
+        for(int len = 2;len <= n;len++){   //枚举子串长度
+            for(int i = 0;i <= n-len;i++){  //枚举起点
+                int j = i+len-1;  //终点
+                if(s[i] == s[j])
+                    dp[i][j] = i+1 <= j-1 ? dp[i+1][j-1] : 1;
+                if(dp[i][j] && maxl < len){
+                    start = i;
+                    maxl = len;
+                }
+            }
+        }
+        return s.substr(start,maxl);
+    }
+    //11. 盛最多水的容器
+    int maxArea(vector<int>& height) {
+        int low = 0,high = height.size()-1;
+        int res = (high-low)*min(height[high],height[low]);
+        while(low < high){
+            if(height[low] <= height[high]) low++;
+            else high--;
+            res = max(res,(high-low)*min(height[high],height[low]));
+        }
+        return res;
+    }
+    //15. 三数之和
+    vector<vector<int>> threeSum(vector<int>& nums) {
+        int n = nums.size();
+        if(n < 3) return vector<vector<int>>();
+        sort(nums.begin(),nums.end()); //排序
+        vector<vector<int>> res;
+        for(int i = 0;i < n;i++){  //i作为第一指针
+            if(nums[i] > 0) return res;   //若起点元素大于0 那么之后的元素全部大于0 直接返回收集到的答案
+            //去重，若起点值与上一个元素值相同，那会得到重复解
+            if(i > 0 && nums[i] == nums[i-1]) continue;
+            int l = i+1, r = n-1;  //第二指针，第三指针
+            while(l < r){
+                int sum = nums[i]+nums[l]+nums[r];
+                if(!sum) {
+                    res.push_back({nums[i],nums[l],nums[r]});
+                    //去重
+                    while(l < r && nums[l] == nums[l+1]) l++;
+                    while(l < r && nums[r] == nums[r-1]) r--;
+                    l++;
+                    r--;
+                }
+                else if(sum < 0) l++;
+                else r--;
+            }
+        }
+        return res; 
+    }
+    //17. 电话号码的字母组合
+    const string grid[10]{"","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
+    void dfs(string& digits,int i,int n,vector<string>& res,string& str){
+        if(i > n){
+            res.push_back(str);
+            return;
+        }
+        int x = digits[i-1]-'0';
+        for(int j = 0;j < grid[x].length();j++){
+            str.push_back(grid[x][j]);
+            dfs(digits,i+1,n,res,str);
+            str.pop_back();
+        }
+    }
+    vector<string> letterCombinations(string digits) {
+        vector<string> res;
+        string str;
+        if(!digits.length()) return res;
+        dfs(digits,1,digits.length(),res,str);
+        return res;
+    }
+    //19. 删除链表的倒数第 N 个结点
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode* dummy = new ListNode();
+        dummy->next = head;
+        ListNode *fast = head, *slow = head, *pre = dummy;
+        while(n--){
+            if(!fast) return head;
+            fast = fast->next;
+        }
+        while(fast){
+            fast = fast->next;
+            pre = slow;
+            slow = slow->next;
+        }
+        pre->next = slow->next;
+        delete slow;
+        return dummy->next;
+    }
+    //22. 括号生成
+    void dfs(int l,int r,vector<string>& res,string& str,int n){
+        if(l+r == 2*n){
+            res.push_back(str);
+            return;
+        }
+        if(l < n){  //还可以放左括号
+            str.push_back('(');
+            dfs(l+1,r,res,str,n);
+            str.pop_back();
+        }
+        if(l > r){  //还可以放右括号
+            str.push_back(')');
+            dfs(l,r+1,res,str,n);
+            str.pop_back();
+        }
+    }
+    vector<string> generateParenthesis(int n) {
+        vector<string> res;
+        string str = "";
+        dfs(0,0,res,str,n);
+        return res;
+    }
+    //23. 合并K个升序链表
+    ListNode* merge2(ListNode* l1,ListNode* l2){
+        ListNode* dummy = new ListNode();
+        ListNode* p = dummy;
+        while(l1 && l2){
+            if(l1->val <= l2->val){
+                p->next = l1;
+                l1 = l1->next;
+            }
+            else{
+                p->next = l2;
+                l2 = l2->next;
+            }
+            p = p->next;
+        }
+        if(!l1) l1 = l2;
+        p->next = l1;
+        return dummy->next;
+    }
+    ListNode* msort(vector<ListNode*>& lists, int low, int high){
+        if(low > high) return NULL;
+        if(low == high) return lists[low];
+        int mid = low+(high-low)/2;
+        ListNode* ll = msort(lists,low,mid);
+        ListNode* rr = msort(lists,mid+1,high);
+        return merge2(ll,rr);
+    }
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        return msort(lists,0,lists.size()-1);
+    }
+    //31. 下一个排列
+    /*  
+        1``从后向前找到第一对nums[i] nums[j]，满足i<j，nums[i]<nums[j]
+            此时nums[j]~nums[end]一定是降序
+        2``再从后向前 遍历nums[end]~nums[j] 找到一个k，满足nums[i] < nums[k]
+        3``swap(nums[i],nums[k])
+        4``此时nums[j]~nums[end]依然为降序
+            reverse(nums[j],nums[end])
+        若在第一步找不到一对递增元素，说明原序列是最大组合，直接reverse即可
+    */
+    void nextPermutation(vector<int>& nums) {
+        int n = nums.size()-1;
+        int i,j;
+        for(j = n,i = n-1;i >= 0;j--,i--){
+            if(nums[i] < nums[j]) break;
+        }
+        if(i < 0) reverse(nums.begin(),nums.end());
+        else{
+            int k;
+            for(k = n;k >= j;k--)
+                if(nums[k] > nums[i])
+                    break;
+            swap(nums[i],nums[k]);
+            reverse(nums.begin()+j,nums.end());
+        }
+    }
+    //32. 最长有效括号
+    int longestValidParentheses(string s) {
+        int n = s.length();
+        vector<int> dp(n,0);
+        /*
+            dp[i]定义为：以 s[i] 结尾的最长有效括号子串的长度
+            遍历s：若 s[i] = ( 那么dp[i] = 0，因为有效字串不可能以(结尾
+                    若 s[i] = ) 且 s[i-1] = ( ，那么 dp[i] = dp[i-2]+2
+                                且 s[i-1] = ) ，那么需要判断
+        */
+        for(int i = 1;i < n;i++){
+            if(s[i]==')'){
+                if(s[i-1] == '(') dp[i] = (i-2 >= 0 ? dp[i-2] : 0) + 2;
+                else if(s[i-1] == ')')
+            }
+        }
     }
 };
 
@@ -561,6 +784,11 @@ int main(){
     // cout << s.reorderSpaces(" practice   makes   perfect");
     // vector<int> a{0,0};
     // cout << s.specialArray(a);
-    
+    // vector<string> a{"A","1","B","C","D","2","3","4","E","5","F","G","6","7","H","I","J","K","L","M"};
+    // s.findLongestSubarray(a);
+    // cout << s.longestPalindrome("cbbd");
+    // vector<int> a{2,3,4,5,18,17,6};
+    // cout << s.maxArea(a);
+    // s.letterCombinations("23");
     return 0;
 }
