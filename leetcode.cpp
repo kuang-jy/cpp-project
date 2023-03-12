@@ -7,17 +7,26 @@
 using namespace std;
 
 const int N = 1e5+10;
-//二叉树结点定义
-struct TreeNode {
-    int val;
-    TreeNode *left;
-    TreeNode *right;
-    TreeNode() : val(0), left(NULL), right(NULL) {}
-    TreeNode(int x) : val(x), left(NULL), right(NULL) {}
-};
 
 class Solution {
 public:
+    //二叉树结点定义
+    struct TreeNode {
+        int val;
+        TreeNode *left;
+        TreeNode *right;
+        TreeNode() : val(0), left(NULL), right(NULL) {}
+        TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+    };
+
+    //链表结点定义
+    struct ListNode{
+        int val;
+        ListNode* next;
+        ListNode() : val(0), next(NULL) {}
+        ListNode(int x): val(x), next(NULL){}
+    };
+
     //剑指 Offer 47. 礼物的最大价值
     int maxValue(vector<vector<int>>& grid) {
         int m = grid.size(), n = grid[0].size();
@@ -141,11 +150,6 @@ public:
         return ans;
     }
     //剑指 Offer 52. 两个链表的第一个公共节点
-    struct ListNode{
-        int val;
-        ListNode* next;
-        ListNode(int x): val(x), next(NULL){}
-    };
     ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
         ListNode* p1 = headA;
         ListNode* p2 = headB;
@@ -745,21 +749,224 @@ public:
         }
     }
     //32. 最长有效括号
+    /*
+        dp[i]定义为：以 s[i] 结尾 可以得到的最长有效括号子串的长度
+        遍历s：若 s[i] = ( 那么dp[i] = 0，因为有效字串不可能以(结尾
+                若 s[i] = ) 且 s[i-1] = ( ，那么 dp[i] = dp[i-2]+2
+                            且 s[i-1] = ) ，那么要找到s[i]对应的括号 dp[i-dp[i-1]-1] ，再加上dp[i-1]，再加上dp[i-dp[i-1]-2]+2
+    */
     int longestValidParentheses(string s) {
-        int n = s.length();
+        int n = s.length(),ans = 0;
         vector<int> dp(n,0);
-        /*
-            dp[i]定义为：以 s[i] 结尾的最长有效括号子串的长度
-            遍历s：若 s[i] = ( 那么dp[i] = 0，因为有效字串不可能以(结尾
-                    若 s[i] = ) 且 s[i-1] = ( ，那么 dp[i] = dp[i-2]+2
-                                且 s[i-1] = ) ，那么需要判断
-        */
         for(int i = 1;i < n;i++){
             if(s[i]==')'){
                 if(s[i-1] == '(') dp[i] = (i-2 >= 0 ? dp[i-2] : 0) + 2;
-                else if(s[i-1] == ')')
+                else if(i-dp[i-1]-1 >= 0 && s[i-dp[i-1]-1] == '(')
+                    dp[i] = 2 + dp[i-1] + (i-dp[i-1]-2 >= 0 ? dp[i-dp[i-1]-2] : 0);
+            }
+            ans = max(ans,dp[i]);
+        }
+        return ans;
+    }
+    //1617. 统计子树中城市之间最大距离
+    vector<int> G[16];  //图
+    void dfs(int n, vector<int>& res,int step,int node,vector<int>& vis){
+        if(step == n) return;
+        res[step]++;
+        for(int i = 0;i < G[node].size();i++){
+            if(vis[G[node][i]]) continue;
+            vis[G[node][i]] = 1;
+            dfs(n,res,step+1,G[node][i],vis);
+            vis[G[node][i]] = 0;  //回溯
+        }
+    }
+    vector<int> countSubgraphsForEachDiameter(int n, vector<vector<int>>& edges) {
+        vector<int> vis(n+1,0);
+        vis[1] = 1;
+        for(int i = 1;i <= n;i++) G[i] = vector<int>();  //初始化图
+        for(int i = 0;i < edges.size();i++){
+            G[edges[i][0]].push_back(edges[i][1]);
+            G[edges[i][1]].push_back(edges[i][0]);
+        }
+        vector<int> res(n+1);
+        dfs(n,res,0,1,vis);
+        return res;
+    }
+    //33. 搜索旋转排序数组
+    int search1(vector<int>& nums, int target) {
+        int low = 0,high = nums.size()-1, mid;
+        while(low <= high){
+            mid = low+(high-low)/2;
+            if(nums[mid] == target) return mid;
+            if(nums[mid] > nums[low]){
+                if(nums[mid] > target && nums[low] <= target) high = mid-1;
+                else low = mid+1;
+            }
+            else {
+                if(nums[mid] < target && nums[high] >= target) low = mid+1;
+                else high = mid-1;
             }
         }
+        return -1;
+    }
+    //34. 在排序数组中查找元素的第一个和最后一个位置
+    int binsearch(vector<int>& nums, int target,int flag){   //flag=1 找左边界，否则找右边界
+        int low = 0, high = nums.size()-1, mid;
+        while(low <= high){
+            mid = low+(high-low)/2;
+            if(flag){
+                if(nums[mid] >= target) high = mid-1;
+                else low = mid+1;
+            }
+            else{
+                if(nums[mid] <= target) low = mid+1;
+                else high = mid-1;
+            }
+        }
+        return flag ? high+1 : low-1;
+    }
+    vector<int> searchRange(vector<int>& nums, int target) {
+        vector<int> res;
+        res.push_back(binsearch(nums,target,1));
+        res.push_back(binsearch(nums,target,0));
+        if(res[0] >= 0 && res[0] < nums.size() && 
+            res[1] < nums.size() && res[1] >= 0 &&
+            nums[res[0]] == target && nums[res[1]] == target)
+            return res;
+        return {-1,-1};
+    }
+    //39. 组合总和
+    void dfs(vector<int>& candidates, int target, vector<int>& res,vector<vector<int>>& ans){
+        if(target < 0) return;
+        if(!target){
+            ans.push_back(res);
+            return;
+        }
+        for(int x: candidates){
+            if(res.size() > 0 && x < res.back()) continue;
+            res.push_back(x);
+            dfs(candidates,target-x,res,ans);
+            res.pop_back();
+        }
+    }
+    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {
+        vector<vector<int>> ans;
+        vector<int> res;
+        dfs(candidates,target,res,ans);
+        return ans;
+    }
+    //46. 全排列
+    void dfs(vector<int>& nums,vector<vector<int>>& ans,vector<int>& res,vector<int>& vis,int n){
+        if(!n){
+            ans.push_back(res);
+            return;
+        }
+        for(int i = 0;i < nums.size();i++){
+            if(vis[i]) continue;
+            res.push_back(nums[i]);
+            vis[i] = 1;
+            dfs(nums,ans,res,vis,n-1);
+            res.pop_back();
+            vis[i] = 0;
+        }
+    }
+    vector<vector<int>> permute(vector<int>& nums) {
+        vector<int> res;
+        vector<vector<int>> ans;
+        int n = nums.size();
+        vector<int> vis(n);
+        dfs(nums,ans,res,vis,n);
+        return ans;
+    }
+    //48. 旋转图像 O(n^2)
+    void rotate(vector<vector<int>>& matrix) {
+        int n = matrix.size();
+        //先水平翻转
+        int i = 0, j = n-1;
+        while(i < j){
+            for(int k = 0;k < n;k++)
+                swap(matrix[i][k],matrix[j][k]);
+            i++;
+            j--;
+        }
+        //再主对角线翻转（转置）
+        for(int i = 0;i < n-1;i++){
+            for(int j = i+1;j < n;j++){
+                swap(matrix[i][j],matrix[j][i]);
+            }
+        }
+    }
+    //49. 字母异位词分组
+    vector<vector<string>> groupAnagrams(vector<string>& strs) {
+        unordered_map<string,vector<string>> mp;
+        string key;
+        for(string str : strs){
+            key = str;
+            sort(key.begin(),key.end());   //排序后的字符串作为key  
+            mp[key].push_back(str);   //加入数组
+        }
+        vector<vector<string>> ans;
+        unordered_map<string,vector<string>>::iterator it = mp.begin();  //map迭代器
+        while(it != mp.end()){
+            ans.push_back(it->second);
+            it++;
+        }
+        return ans;
+    }
+    //53. 最大子数组和
+    int maxSubArray(vector<int>& nums) {
+        int f = nums[0], ans = nums[0];
+        for(int i = 1;i < nums.size();i++){
+            f = max(f+nums[i],nums[i]);
+            ans = max(f,ans);
+        }
+        return ans;
+    }
+    //55. 跳跃游戏
+    bool canJump(vector<int>& nums){  //动态规划
+        if(nums.size() <= 1) return 1;
+        if(nums[0] == 0) return 0;
+        int maxpos = 0;
+        for(int i = 0;i < nums.size()-1;i++){
+            maxpos = max(maxpos,i+nums[i]);
+            if(maxpos == i) return 0;
+        }
+        return maxpos >= nums.size()-1 ? 1 : 0;
+    }
+    //56. 合并区间
+    static bool cmp56(vector<int>& a,vector<int>& b){
+        if(a[0] != b[0]) return a[0] < b[0];
+        return a[1] < b[1];
+    }
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        sort(intervals.begin(),intervals.end(),cmp56);
+        vector<vector<int>> ans;
+        ans.push_back(intervals[0]);
+        for(int i = 1;i < intervals.size();i++){
+            if(ans.back()[1] >= intervals[i][0]) 
+                ans.back()[1] = max(ans.back()[1],intervals[i][1]);
+            else ans.push_back(intervals[i]);
+        }
+        return ans;
+    }
+    //62. 不同路径
+    int uniquePaths(int m, int n) {
+        vector<vector<int>> dp(m+1,vector<int>(n+1));
+        for(int i = 1;i <= m;i++)
+            for(int j = 1;j <= n;j++)
+                if(i == 1 && j == 1) dp[i][j] = 1;
+                else dp[i][j] = dp[i-1][j]+dp[i][j-1];
+        return dp[m][n];        
+    }
+    //64. 最小路径和
+    int minPathSum(vector<vector<int>>& grid) {
+        int m = grid.size(), n = grid[0].size();
+        vector<vector<int>> dp(m+1,vector<int>(n+1,INT8_MAX));
+        for(int i = 1;i <= m;i++)
+            for(int j = 1;j <= n;j++)
+                if(i == 1 && j == 1) dp[i][j] = grid[i-1][j-1];
+                else dp[i][j] = min(dp[i-1][j],dp[i][j-1])+grid[i-1][j-1];
+        return dp[m][n];
     }
 };
 
@@ -790,5 +997,13 @@ int main(){
     // vector<int> a{2,3,4,5,18,17,6};
     // cout << s.maxArea(a);
     // s.letterCombinations("23");
+    // vector<vector<int>> edges{{1,2},{2,3},{2,4}};
+    // s.countSubgraphsForEachDiameter(4,edges);
+    // vector<int> arr{4,5,6,7,0,1,2};
+    // cout << s.search1(arr,0);
+    // vector<int> arr{5,7,7,8,8,10};
+    // s.searchRange(arr,6);
+    vector<vector<int>> x{{1,3},{1,6},{8,10},{15,18}};
+    s.merge(x);
     return 0;
 }
