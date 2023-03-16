@@ -520,9 +520,8 @@ public:
         vector<int> order(n);
         for (int i = 0; i < n; ++i)   //创建索引数组
             order[i] = i;
-        sort(order.begin(), order.end(), [&](int i, int j){   //给索引数组排序，按照年龄升序，若相同就按照分数降序
-            return ages[i] < ages[j] || (ages[i] == ages[j] && scores[i] < scores[j]);
-        });
+        //给索引数组排序，按照年龄升序，若相同就按照分数降序
+        sort(order.begin(), order.end(), [&](int i, int j) -> bool {return ages[i] < ages[j] || (ages[i] == ages[j] && scores[i] < scores[j]);} );
         vector<int> dp(n);   //dp[i]表示第i个球员为止的最大分数
         int ans = 0;
         for(int i = 0;i < n;i++){
@@ -968,6 +967,107 @@ public:
                 else dp[i][j] = min(dp[i-1][j],dp[i][j-1])+grid[i-1][j-1];
         return dp[m][n];
     }
+    //1605. 给定行和列的和求可行矩阵
+    vector<vector<int>> restoreMatrix(vector<int>& rowSum, vector<int>& colSum) {
+        int n = rowSum.size();
+        int m = colSum.size();
+        vector<vector<int>> res(n,vector<int>(m,0));
+        for(int i = 0;i < n;i++)    //贪心
+            for(int j = 0;j < m;j++){
+                res[i][j] = min(rowSum[i],colSum[j]);
+                rowSum[i]-=res[i][j];
+                colSum[j]-=res[i][j];
+            }
+        return res;
+    }
+    //1615. 最大网络秩
+    int maximalNetworkRank(int n, vector<vector<int>>& roads) {
+        vector<int> degrees(n);  //度
+        vector<vector<int>> set(n,vector<int>(n));  //邻接矩阵
+        for(vector<int> x : roads){
+            degrees[x[0]]++;
+            degrees[x[1]]++;
+            set[x[0]][x[1]] = 1;
+            set[x[1]][x[0]] = 1;
+        }
+        int ans = 0;
+        for(int i = 0;i < n-1;i++)
+            for(int j = i+1;j < n;j++)
+                ans = max(ans,degrees[i]+degrees[j]-set[i][j]);
+        return ans;
+    }
+    //2373. 矩阵中的局部最大值
+    const int arr[9][2] {{0,0},{-1,0},{-1,-1},{-1,1},{1,0},{1,1},{1,-1},{0,1},{0,-1}};  //增量矩阵
+    vector<vector<int>> largestLocal(vector<vector<int>>& grid) {
+        int n = grid.size();
+        vector<vector<int>> res(n-2,vector<int>(n-2));
+        for(int i = 1;i <= n-2;i++)
+            for(int j = 1;j <= n-2;j++)
+                for(int k = 0;k < 9;k++)
+                    res[i-1][j-1] = max(res[i-1][j-1],grid[i+arr[k][0]][j+arr[k][1]]);
+        return res;
+    }
+    //1487. 保证文件名唯一
+    vector<string> getFolderNames(vector<string>& names) {
+        unordered_map<string,int> mp;  //map记录文件名是否出现，以及冲突次数
+        for(string& str : names){
+            int k = mp[str];
+            if(k){
+                while(mp[str+"("+to_string(k)+")"]){
+                    k++;
+                }
+                mp[str] = k;
+                str += "("+to_string(k)+")";
+            }
+            mp[str] = 1;
+        }
+        return names;
+    }
+    //560. 和为 K 的子数组
+    int subarraySum(vector<int>& nums, int k) {
+        int presum = 0,res = 0;
+        unordered_map<int,int> mp;
+        mp[0] = 1;   //空数组的前缀和为0，出现一次
+        for(int& x: nums){
+            presum += x;
+            res+=mp[presum-k];
+            mp[presum]++;
+        }
+        return res;
+    }
+    //2488. 统计中位数为 K 的子数组
+    //大于 k=1，小于 k=-1，等于 k 记为 k`
+    //题目就是在求当奇数个元素时子数字和为 k` 的子数字个数
+    //           当偶数个元素时子数组和为 k`+1 的子数组个数
+    //          假设包含当前元素的前缀和为presum，作为终点，那么需要找到一个起点x，使得 presum-(x对应的前缀和) = k` or k`+1
+    //          ==> x对应的前缀和 = presum-k` ot presum-k`-1
+    //          因此需要记录 presum-k` 和 presum-k`-1 的出现次数，使用哈希表存储
+    //          对于 k` 的取值，因为数组中是 1~n 的无重复数字，因此若取 k`< n 就无法区分前缀和是否满足要求
+    //          故令 k` = n
+    int help(int n,int k,int kk){
+        if(n == k) return kk;
+        if(n < k) return -1;
+        return 1; 
+    }
+    int countSubarrays(vector<int>& nums, int k) {
+        int n = nums.size();
+        int ans = 0, presum = 0,kk = n;
+        unordered_map<int,int> mp;  //维护前缀和为 key 的子数组出现次数 value
+        unordered_map<int,int>::iterator it;
+        mp[0] = 1;  //若是空数组，那么前缀和为0已经出现1次
+        for(int& num : nums){
+            presum += help(num,k,kk);
+            it = mp.find(presum-kk);
+            if(it != mp.end())
+                ans += it->second;
+            it = mp.find(presum-kk-1);
+            if(it != mp.end())
+                ans += it->second;
+            if(!mp[presum]) mp[presum] = 1;
+            else mp[presum]++;
+        }
+        return ans;
+    }
 };
 
 int main(){
@@ -1003,7 +1103,12 @@ int main(){
     // cout << s.search1(arr,0);
     // vector<int> arr{5,7,7,8,8,10};
     // s.searchRange(arr,6);
-    vector<vector<int>> x{{1,3},{1,6},{8,10},{15,18}};
-    s.merge(x);
+    // vector<vector<int>> x{{1,3},{1,6},{8,10},{15,18}};
+    // s.merge(x);
+    // s.restoreMatrix();
+    // vector<string> a{"gta","gta(1)","gta","avalon"};
+    // s.getFolderNames(a);
+    vector<int> a{2,5,1,4,3,6};
+    s.countSubarrays(a,1);
     return 0;
 }
